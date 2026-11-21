@@ -67,55 +67,13 @@ end
 core.register_on_shutdown(write_entities)
 luaentity.entities_index = 0
 
-local move_entities_globalstep_part1
 local is_active
 
-if pipeworks.use_real_entities then
-	local active_blocks = {} -- These only contain active blocks near players (i.e., not forceloaded ones)
 
-	local function get_blockpos(pos)
-		return {x = math.floor(pos.x / 16),
-				y = math.floor(pos.y / 16),
-				z = math.floor(pos.z / 16)}
-	end
-
-	move_entities_globalstep_part1 = function(dtime)
-		local active_block_range = tonumber(core.settings:get("active_block_range")) or 2
-		for key in pairs(active_blocks) do
-			active_blocks[key] = nil
-		end
-		for _, player in ipairs(core.get_connected_players()) do
-			local blockpos = get_blockpos(player:get_pos())
-			local minpx = blockpos.x - active_block_range
-			local minpy = blockpos.y - active_block_range
-			local minpz = blockpos.z - active_block_range
-			local maxpx = blockpos.x + active_block_range
-			local maxpy = blockpos.y + active_block_range
-			local maxpz = blockpos.z + active_block_range
-
-			for x = minpx, maxpx do
-				for y = minpy, maxpy do
-					for z = minpz, maxpz do
-						local pos = {x = x, y = y, z = z}
-						active_blocks[core.hash_node_position(pos)] = true
-					end
-				end
-			end
-		end
-		-- todo: callbacks on block load/unload
-	end
-
-	is_active = function(pos)
-		return active_blocks[core.hash_node_position(get_blockpos(pos))] ~= nil
-	end
-else
-	move_entities_globalstep_part1 = function()
-	end
-
-	is_active = function()
-		return false
-	end
+is_active = function()
+	return false
 end
+
 
 local entitydef_default = {
 	_attach = function(self, attached, attach_to)
@@ -349,10 +307,16 @@ function luaentity.get_objects_inside_radius(pos, radius)
 end
 
 local move_entities_globalstep_part2 = function(dtime)
+
 	if not luaentity.entities then
 		luaentity.entities = read_entities()
 	end
+
+	local master_entity_pos = {}
+
+
 	for _, entity in pairs(luaentity.entities) do
+
 		local master = entity._attached_entities_master
 		local master_def = master and entity._attached_entities[master]
 		local master_entity = master_def and master_def.entity

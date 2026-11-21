@@ -29,7 +29,7 @@ local settings = {
 	enable_cyclic_mode = true,
 	drop_on_routing_fail = false,
 	delete_item_on_clearobject = true,
-	use_real_entities = true,
+	use_real_entities = false,
 	entity_update_interval = 0,
 	enable_vertical_digilines_connectivity = false,
 }

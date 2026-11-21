@@ -240,25 +240,6 @@ core.register_entity("pipeworks:tubed_item", {
 
 	from_data = function(self, itemstring)
 		local stack = ItemStack(itemstring)
-		--[[
-		local itemtable = stack:to_table()
-		local itemname = nil
-		if itemtable then
-			itemname = stack:to_table().name
-		end
-		local item_texture = nil
-		local item_type = ""
-		if core.registered_items[itemname] then
-			item_texture = core.registered_items[itemname].inventory_image
-			item_type = core.registered_items[itemname].type
-		end
-		--]]
-		self.object:set_properties({
-			is_visible = true,
-			textures = {stack:get_name()}
-		})
-		local def = stack:get_definition()
-		self.object:set_yaw((def and def.type == "node") and 0 or math.pi * 0.25)
 	end,
 
 	get_staticdata = luaentity.get_staticdata,
@@ -322,43 +303,27 @@ luaentity.register_entity("pipeworks:tubed_item", {
 		if self.itemstring == itemstring then
 			return
 		end
-		if self.item_entity then
-			self:remove_attached_entity(self.item_entity)
-		end
 		self.itemstring = itemstring
-		self.item_entity = self:add_attached_entity("pipeworks:tubed_item", itemstring)
-	end,
-
-	set_color = function(self, color)
-		if self.color == color then
-			return
-		end
-		self.color = color
-		if self.color_entity then
-			self:remove_attached_entity(self.color_entity)
-		end
-		if color then
-			self.color_entity = self:add_attached_entity("pipeworks:color_entity", color)
-		else
-			self.color_entity = nil
-		end
 	end,
 
 	on_step = function(self, dtime)
 		local pos = self:get_pos()
+
 		if self.start_pos == nil then
 			self.start_pos = vector.round(pos)
-			self:set_pos(pos)
 		end
 
 		local velocity = self:get_velocity()
 
 		local moved = false
+
 		local speed = math.abs(velocity.x + velocity.y + velocity.z)
+
 		if speed == 0 then
 			speed = 1
 			moved = true
 		end
+
 		local vel = {x = velocity.x / speed, y = velocity.y / speed, z = velocity.z / speed, speed = speed}
 		local moved_by = vector.distance(pos, self.start_pos)
 
@@ -441,25 +406,3 @@ luaentity.register_entity("pipeworks:tubed_item", {
 		end
 	end
 })
-
-if core.get_modpath("mesecons_mvps") then
-	mesecon.register_mvps_unmov("pipeworks:tubed_item")
-	mesecon.register_mvps_unmov("pipeworks:color_entity")
-	mesecon.register_on_mvps_move(function(moved_nodes)
-		local moved = {}
-		for _, n in ipairs(moved_nodes) do
-			moved[core.hash_node_position(n.oldpos)] = vector.subtract(n.pos, n.oldpos)
-		end
-		for _, entity in pairs(luaentity.entities) do
-			if entity.name == "pipeworks:tubed_item" then
-				local pos = entity:get_pos()
-				local rpos = vector.round(pos)
-				local dir = moved[core.hash_node_position(rpos)]
-				if dir then
-					entity:set_pos(vector.add(pos, dir))
-					entity.start_pos = vector.add(entity.start_pos, dir)
-				end
-			end
-		end
-	end)
-end

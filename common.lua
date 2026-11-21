@@ -78,9 +78,7 @@ local function overlay_tube_texture(texture)
 end
 
 function pipeworks.make_tube_tile(tile)
-	if pipeworks.use_real_entities then
-		return tile
-	elseif type(tile) == "string" then
+	if type(tile) == "string" then
 		return overlay_tube_texture(tile)
 	else
 		tile = table.copy(tile)
